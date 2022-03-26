@@ -513,16 +513,16 @@ open class EasyTipView: UIView {
 
         switch position {
         case .bottom, .top, .any:
-            var arrowTipXOrigin: CGFloat
+            let arrowTipXOrigin: CGFloat
             if frame.width < refViewFrame.width {
-                arrowTipXOrigin = tipViewSize.width / 2
+                arrowTipXOrigin = min(frame.minX + preferences.positioning.bubbleInsets.left, frame.maxX)
             } else {
-                arrowTipXOrigin = abs(frame.x - refViewFrame.x) + refViewFrame.width / 2
+                arrowTipXOrigin = tipViewSize.width / 2
             }
 
             arrowTip = CGPoint(x: arrowTipXOrigin, y: position == .bottom ? tipViewSize.height - preferences.positioning.bubbleInsets.bottom :  preferences.positioning.bubbleInsets.top)
         case .right, .left:
-            var arrowTipYOrigin: CGFloat
+            let arrowTipYOrigin: CGFloat
             if frame.height < refViewFrame.height {
                 arrowTipYOrigin = tipViewSize.height / 2
             } else {
