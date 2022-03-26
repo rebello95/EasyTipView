@@ -116,90 +116,6 @@ public extension EasyTipView {
         let ev = EasyTipView(text: attributedText, preferences: preferences, delegate: delegate)
         ev.show(animated: animated, forView: view, withinSuperview: superview)
     }
-
-    // MARK:- Instance methods -
-
-    /**
-     Presents an EasyTipView pointing to a particular UIBarItem instance within the specified superview
-
-     - parameter animated:  Pass true to animate the presentation.
-     - parameter item:      The UIBarButtonItem or UITabBarItem instance which the EasyTipView will be pointing to.
-     - parameter superview: A view which is part of the UIBarButtonItem instances superview hierarchy. Ignore this parameter in order to display the EasyTipView within the main window.
-     */
-    func show(animated: Bool = true, forItem item: UIBarItem, withinSuperview superview: UIView? = nil) {
-        if let view = item.view {
-            show(animated: animated, forView: view, withinSuperview: superview)
-        }
-    }
-
-    /**
-     Presents an EasyTipView pointing to a particular UIView instance within the specified superview
-
-     - parameter animated:  Pass true to animate the presentation.
-     - parameter view:      The UIView instance which the EasyTipView will be pointing to.
-     - parameter superview: A view which is part of the UIView instances superview hierarchy or a custom UIWindow. Ignore this parameter in order to display the EasyTipView within the main window.
-     */
-    func show(animated: Bool = true, forView view: UIView, withinSuperview superview: UIView? = nil) {
-
-        #if TARGET_APP_EXTENSIONS
-        precondition(superview != nil, "The supplied superview parameter cannot be nil for app extensions.")
-
-        let superview = superview!
-        #else
-        precondition(superview == nil || superview is UIWindow || view.hasSuperview(superview!), "The supplied superview <\(superview!)> is not a direct nor an indirect superview of the supplied reference view <\(view)>. The superview passed to this method should be a direct or an indirect superview of the reference view. To display the tooltip within the main window, ignore the superview parameter.")
-
-        let superview = superview ?? UIApplication.shared.windows.first!
-        #endif
-
-        let initialTransform = preferences.animating.showInitialTransform
-        let finalTransform = preferences.animating.showFinalTransform
-        let initialAlpha = preferences.animating.showInitialAlpha
-        let damping = preferences.animating.springDamping
-        let velocity = preferences.animating.springVelocity
-
-        presentingView = view
-        arrange(withinSuperview: superview)
-
-        transform = initialTransform
-        alpha = initialAlpha
-
-        let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap))
-        addGestureRecognizer(tap)
-
-        superview.addSubview(self)
-
-        let animations : () -> () = {
-            self.transform = finalTransform
-            self.alpha = 1
-        }
-
-        if animated {
-            UIView.animate(withDuration: preferences.animating.showDuration, delay: 0, usingSpringWithDamping: damping, initialSpringVelocity: velocity, options: [.curveEaseInOut], animations: animations, completion: nil)
-        }else{
-            animations()
-        }
-    }
-
-    /**
-     Dismisses the EasyTipView
-
-     - parameter completion: Completion block to be executed after the EasyTipView is dismissed.
-     */
-    func dismiss(withCompletion completion: (() -> ())? = nil){
-
-        let damping = preferences.animating.springDamping
-        let velocity = preferences.animating.springVelocity
-
-        UIView.animate(withDuration: preferences.animating.dismissDuration, delay: 0, usingSpringWithDamping: damping, initialSpringVelocity: velocity, options: [.curveEaseInOut], animations: {
-            self.transform = self.preferences.animating.dismissTransform
-            self.alpha = self.preferences.animating.dismissFinalAlpha
-        }) { (finished) -> Void in
-            completion?()
-            self.delegate?.easyTipViewDidDismiss(self)
-            self.removeFromSuperview()
-            self.transform = CGAffineTransform.identity
-        }
-    }
 }
 
 // MARK: - EasyTipView class implementation -
@@ -429,6 +345,90 @@ open class EasyTipView: UIView {
         UIView.animate(withDuration: 0.3) {
             self.arrange(withinSuperview: sview)
             self.setNeedsDisplay()
+        }
+    }
+
+    // MARK:- Instance methods -
+
+    /**
+     Presents an EasyTipView pointing to a particular UIBarItem instance within the specified superview
+
+     - parameter animated:  Pass true to animate the presentation.
+     - parameter item:      The UIBarButtonItem or UITabBarItem instance which the EasyTipView will be pointing to.
+     - parameter superview: A view which is part of the UIBarButtonItem instances superview hierarchy. Ignore this parameter in order to display the EasyTipView within the main window.
+     */
+    open func show(animated: Bool = true, forItem item: UIBarItem, withinSuperview superview: UIView? = nil) {
+        if let view = item.view {
+            show(animated: animated, forView: view, withinSuperview: superview)
+        }
+    }
+
+    /**
+     Presents an EasyTipView pointing to a particular UIView instance within the specified superview
+
+     - parameter animated:  Pass true to animate the presentation.
+     - parameter view:      The UIView instance which the EasyTipView will be pointing to.
+     - parameter superview: A view which is part of the UIView instances superview hierarchy or a custom UIWindow. Ignore this parameter in order to display the EasyTipView within the main window.
+     */
+    open func show(animated: Bool = true, forView view: UIView, withinSuperview superview: UIView? = nil) {
+
+#if TARGET_APP_EXTENSIONS
+        precondition(superview != nil, "The supplied superview parameter cannot be nil for app extensions.")
+
+        let superview = superview!
+#else
+        precondition(superview == nil || superview is UIWindow || view.hasSuperview(superview!), "The supplied superview <\(superview!)> is not a direct nor an indirect superview of the supplied reference view <\(view)>. The superview passed to this method should be a direct or an indirect superview of the reference view. To display the tooltip within the main window, ignore the superview parameter.")
+
+        let superview = superview ?? UIApplication.shared.windows.first!
+#endif
+
+        let initialTransform = preferences.animating.showInitialTransform
+        let finalTransform = preferences.animating.showFinalTransform
+        let initialAlpha = preferences.animating.showInitialAlpha
+        let damping = preferences.animating.springDamping
+        let velocity = preferences.animating.springVelocity
+
+        presentingView = view
+        arrange(withinSuperview: superview)
+
+        transform = initialTransform
+        alpha = initialAlpha
+
+        let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap))
+        addGestureRecognizer(tap)
+
+        superview.addSubview(self)
+
+        let animations : () -> () = {
+            self.transform = finalTransform
+            self.alpha = 1
+        }
+
+        if animated {
+            UIView.animate(withDuration: preferences.animating.showDuration, delay: 0, usingSpringWithDamping: damping, initialSpringVelocity: velocity, options: [.curveEaseInOut], animations: animations, completion: nil)
+        }else{
+            animations()
+        }
+    }
+
+    /**
+     Dismisses the EasyTipView
+
+     - parameter completion: Completion block to be executed after the EasyTipView is dismissed.
+     */
+    open func dismiss(withCompletion completion: (() -> ())? = nil){
+
+        let damping = preferences.animating.springDamping
+        let velocity = preferences.animating.springVelocity
+
+        UIView.animate(withDuration: preferences.animating.dismissDuration, delay: 0, usingSpringWithDamping: damping, initialSpringVelocity: velocity, options: [.curveEaseInOut], animations: {
+            self.transform = self.preferences.animating.dismissTransform
+            self.alpha = self.preferences.animating.dismissFinalAlpha
+        }) { (finished) -> Void in
+            completion?()
+            self.delegate?.easyTipViewDidDismiss(self)
+            self.removeFromSuperview()
+            self.transform = CGAffineTransform.identity
         }
     }
 
