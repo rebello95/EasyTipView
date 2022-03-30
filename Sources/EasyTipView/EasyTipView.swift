@@ -143,6 +143,7 @@ open class EasyTipView: UIView {
             public var foregroundColor     = UIColor.white
             public var backgroundColor     = UIColor.red
             public var arrowPosition       = ArrowPosition.any
+            public var alignArrowXAxisLeft = false
             public var textAlignment       = NSTextAlignment.center
             public var borderWidth         = CGFloat(0)
             public var borderColor         = UIColor.clear
@@ -513,13 +514,17 @@ open class EasyTipView: UIView {
 
         switch position {
         case .bottom, .top, .any:
-            let arrowTipXOrigin: CGFloat
-            if frame.width < refViewFrame.width {
-                arrowTipXOrigin = min(frame.minX + preferences.positioning.bubbleInsets.left, frame.maxX)
+            var arrowTipXOrigin: CGFloat
+            if preferences.drawing.alignArrowXAxisLeft {
+                arrowTipXOrigin = abs(frame.x - refViewFrame.x) + preferences.positioning.contentInsets.left + preferences.positioning.bubbleInsets.left
             } else {
-                arrowTipXOrigin = tipViewSize.width / 2
+                if frame.width < refViewFrame.width {
+                    arrowTipXOrigin = tipViewSize.width / 2
+                } else {
+                    arrowTipXOrigin = abs(frame.x - refViewFrame.x) + refViewFrame.width / 2
+                }
             }
-
+            
             arrowTip = CGPoint(x: arrowTipXOrigin, y: position == .bottom ? tipViewSize.height - preferences.positioning.bubbleInsets.bottom :  preferences.positioning.bubbleInsets.top)
         case .right, .left:
             let arrowTipYOrigin: CGFloat
